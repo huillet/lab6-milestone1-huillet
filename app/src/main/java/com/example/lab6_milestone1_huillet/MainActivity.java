@@ -7,6 +7,7 @@ import android.Manifest;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
+import android.util.Log;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
@@ -30,19 +31,21 @@ public class MainActivity extends FragmentActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.fragment_map);
-        mapFragment.getMapAsync(googleMap -> {
-            mMap = googleMap;
-            // code to display marker
-            googleMap.addMarker(new MarkerOptions()
-                    .position(mDestinationLatLng)
-                    .title("Destination"));
-            displayMyLocation();
-        });
 
         // Obtain a FusedLocationProviderClient
         mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
+
+        mapFragment.getMapAsync(googleMap -> {
+            mMap = googleMap;
+            // code to display marker
+            mMap.addMarker(new MarkerOptions()
+                    .position(mDestinationLatLng)
+                    .title("Bascom Hall"));
+            displayMyLocation();
+        });
     }
 
     private void displayMyLocation() {
@@ -63,9 +66,18 @@ public class MainActivity extends FragmentActivity {
                                 Location mLastKnownLocation = task.getResult();
                                 if (task.isSuccessful() && mLastKnownLocation != null)
                                 {
+                                    Log.i("Test", "found location");
+                                    LatLng currentPosition = new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude());
                                     mMap.addPolyline(new PolylineOptions().add(
-                                            new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude()),
+                                            currentPosition,
                                             mDestinationLatLng));
+                                    mMap.addMarker(new MarkerOptions()
+                                            .position(currentPosition)
+                                            .title("You"));
+                                }
+                                else
+                                {
+                                    Log.i("Test", "location null");
                                 }
                             });
         }
@@ -74,13 +86,13 @@ public class MainActivity extends FragmentActivity {
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults)
     {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION) {
             // If request is cancelled, the result arrays are empty
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 displayMyLocation();
             }
         }
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
 }
